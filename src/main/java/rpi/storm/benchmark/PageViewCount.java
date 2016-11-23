@@ -59,7 +59,6 @@ public class PageViewCount {
         int parallel = ((Number)commonConfig.get("kafka.partitions")).intValue();
         int workers = ((Number)commonConfig.get("storm.workers")).intValue();
         int ackers = ((Number)commonConfig.get("storm.ackers")).intValue();
-        int cores = ((Number)commonConfig.get("process.cores")).intValue();
 
         ZkHosts hosts = new ZkHosts(zkServerHosts);
 

@@ -54,7 +54,6 @@ public class RollingSort {
         int parallel = ((Number)commonConfig.get("kafka.partitions")).intValue();
         int workers = ((Number)commonConfig.get("storm.workers")).intValue();
         int ackers = ((Number)commonConfig.get("storm.ackers")).intValue();
-        int cores = ((Number)commonConfig.get("process.cores")).intValue();
         int emitFreq = ((Number)commonConfig.get("rollingsort.emit_freq")).intValue();
         int chunkSize = ((Number)commonConfig.get("rollingsort.chunk_size")).intValue();
 

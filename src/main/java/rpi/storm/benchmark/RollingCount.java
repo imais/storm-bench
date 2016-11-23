@@ -55,7 +55,6 @@ public class RollingCount {
         int parallel = ((Number)commonConfig.get("kafka.partitions")).intValue();
         int workers = ((Number)commonConfig.get("storm.workers")).intValue();
         int ackers = ((Number)commonConfig.get("storm.ackers")).intValue();
-        int cores = ((Number)commonConfig.get("process.cores")).intValue();
         int windowLength = ((Number)commonConfig.get("rollingcount.window_length")).intValue();
         int emitFreq = ((Number)commonConfig.get("rollingcount.emit_freq")).intValue();
 

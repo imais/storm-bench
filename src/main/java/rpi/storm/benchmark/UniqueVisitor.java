@@ -59,7 +59,6 @@ public class UniqueVisitor {
         int parallel = ((Number)commonConfig.get("kafka.partitions")).intValue();
         int workers = ((Number)commonConfig.get("storm.workers")).intValue();
         int ackers = ((Number)commonConfig.get("storm.ackers")).intValue();
-        int cores = ((Number)commonConfig.get("process.cores")).intValue();
         int winLen = ((Number)commonConfig.get("uniquevisitor.window_length")).intValue();
         int emitFreq = ((Number)commonConfig.get("uniquevisitor.emit_freq")).intValue();
 

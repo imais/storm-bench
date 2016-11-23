@@ -54,7 +54,6 @@ public class SOL {
         int parallel = ((Number)commonConfig.get("kafka.partitions")).intValue();
         int workers = ((Number)commonConfig.get("storm.workers")).intValue();
         int ackers = ((Number)commonConfig.get("storm.ackers")).intValue();
-        int cores = ((Number)commonConfig.get("process.cores")).intValue();
         int numLevels = ((Number)commonConfig.get("sol.topology_level")).intValue();
 
         ZkHosts hosts = new ZkHosts(zkServerHosts);
