@@ -3,6 +3,7 @@ package rpi.storm.benchmark;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Fields;
+import backtype.storm.spout.SchemeAsMultiScheme;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,10 @@ public class TridentWordCount extends BenchmarkBase {
 
     @Override
     public StormTopology getTopology() {
-        spout  = new TransactionalTridentKafkaSpout(
-            new TridentKafkaConfig(spoutConf_.hosts, spoutConf_.topic, spoutConf_.clientId));
+        TridentKafkaConfig kafkaConf = 
+            new TridentKafkaConfig(spoutConf_.hosts, spoutConf_.topic, spoutConf_.clientId);
+        kafkaConf.scheme = new SchemeAsMultiScheme(new StringScheme());
+        spout  = new TransactionalTridentKafkaSpout(kafkaConf);
 
         TridentTopology trident = new TridentTopology();
 
