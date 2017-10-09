@@ -6,7 +6,7 @@ PACKAGE="rpi.storm.benchmark"
 CORES_PER_VM=2
 
 if [ $# -lt 2 ] ; then
-    echo "Usage; ./run {rsort|sol|wc|clean|grep|pv|visitor|rcount} [#VMs(m)]"
+    echo "Usage; ./run {rsort|sol|wc|clean|grep|pv|visitor|rcount|gcount} [#VMs(m)]"
     exit 1    
 fi
 
@@ -63,6 +63,12 @@ case "$1" in
         class=RollingCount
         topo=rollingcount
         topic=book
+        num_comps=3
+        ;;
+    gcount)
+        class=RollingGeoCount
+        topo=rollinggeocount
+        topic=adsb
         num_comps=3
         ;;
 esac
