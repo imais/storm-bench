@@ -41,8 +41,8 @@ public class RollingGeoCount extends BenchmarkBase {
 
     public static class ZoneIndex extends BaseBasicBolt {
         public static final String FIELDS = "zone";
-        public static final String ZONE_INVALID = "invalid";
-        public static final String ZONE_OUTSIDE_US = "outside_us";
+        public static final String ZONE_NO_LATLNG = "no_latlng";
+        public static final String ZONE_UNDEFINED = "undefined";
 
         @Override
         public void prepare(Map stormConf, TopologyContext context) {
@@ -51,22 +51,32 @@ public class RollingGeoCount extends BenchmarkBase {
         @Override
         public void execute(Tuple input, BasicOutputCollector collector) {
             String str = input.getString(0);
-            String zone = ZONE_INVALID;
+            String zone = ZONE_NO_LATLNG;
 
             if (str.startsWith("{\"Id\"") && str.endsWith("},")) {
                 // remove "," at the end and parse it as an JSON object
                 JSONObject obj = new JSONObject(str.substring(0, str.length() - 1));
-                if (obj.getString("Lat") != null && obj.getString("Long") != null) {
-                    double lat = Double.parseDouble(obj.getString("Lat"));
-                    double lng = Double.parseDouble(obj.getString("Long"));
+                if (obj.has("Lat") && !obj.isNull("Lat") && 
+                    obj.has("Long") && !obj.isNull("Long")) {
+                    double lat = obj.getDouble("Lat");
+                    double lng = obj.getDouble("Long");
 
-                    if ((24 <= lat && lat < 48) && (lng <= 66 && lng < 126)) {
-                        // zone id according to the U.S. national grid
-                        char letter = (char)('R' + (int)((lat - 24) / 8));
-                        zone  = Integer.toString(19 - (int)((lng - 66) / 6)) + letter;
+                    if ((-80 <= lat && lat < 84) && (-180 <= lng && lng < 180)) {
+                        int[] base_lat = {80, 32, -8};
+                        char[] base_letters = {'C', 'J', 'P'};
+                        int lat_mode = 0;
+
+                        if (lat < -32) lat_mode = 0;      // [-80, -32): C...H
+                        else if (lat < 8) lat_mode = 1;   // [-32, 8): J...Q
+                        else if (lat < 72) lat_mode = 2;  // [8, 72): P...W
+                        else lat_mode = 3;                // [72, 84): X
+
+                        char letter = (lat_mode == 3) ? 'X' : 
+                            (char)(base_letters[lat_mode] + (int)((lat + base_lat[lat_mode]) / 8));
+                        zone  = Integer.toString(1 + (int)((lng + 180) / 6)) + letter;
                     }
-                    else
-                        zone = ZONE_OUTSIDE_US;
+                    else 
+                        zone = ZONE_UNDEFINED;
                 }
             }
             collector.emit(new Values(zone));
