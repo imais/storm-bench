@@ -19,6 +19,7 @@
 package intel.storm.benchmark.tools;
 
 import org.apache.log4j.Logger;
+import backtype.storm.tuple.Values;
 import backtype.storm.utils.MutableObject;
 import intel.storm.benchmark.lib.reducer.Reducer;
 
@@ -56,6 +57,8 @@ public class SlidingWindow<K, V> implements Serializable {
 
   public Map<K, V> reduceThenAdvanceWindow() {
     Map<K, V> reduced = slots.reduceByKey();
+    Values vals = (Values)reduced.get("3C6601");
+    // System.out.println("[reduceThenAdvanceWindow]: reduced.size=" + reduced.size());
     slots.wipeSlot(tailSlot);
     slots.wipeZeros();
     advanceHead();
@@ -99,13 +102,17 @@ public class SlidingWindow<K, V> implements Serializable {
       } else {
         MutableObject mut = values[slot];
         mut.setObject(reducer.reduce((V) mut.getObject(), val));
+        // Values vals = (Values)mut.getObject();
+        // System.out.println("[Slots.add]: " + obj + ", " + vals.get(0) + ", " + vals.get(1));
       }
     }
 
     public Map<K, V> reduceByKey() {
       Map<K, V> reduced = new HashMap<K, V>();
       for (K obj : objToValues.keySet()) {
-        reduced.put(obj, reduce(obj));
+        V val = reduce(obj);
+        // System.out.println("[Slots.reduceByKey]: " + obj + ", " + val);
+        reduced.put(obj, val);
       }
       return reduced;
     }
@@ -119,6 +126,7 @@ public class SlidingWindow<K, V> implements Serializable {
       final int len = values.length;
       V val = reducer.zero();
       for (int i = 0; i < len; i++) {
+        // reduce values accross all slots
         MutableObject mut = values[i];
         val = reducer.reduce(val, (V) mut.getObject());
       }

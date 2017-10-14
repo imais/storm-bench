@@ -1,6 +1,7 @@
 package rpi.storm.benchmark.common;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AuthorizationException;
 import backtype.storm.generated.AlreadyAliveException;
@@ -90,6 +91,19 @@ abstract public class BenchmarkBase {
     public void submitTopology(String name) throws 
         AuthorizationException, AlreadyAliveException, InvalidTopologyException {
         StormSubmitter.submitTopologyWithProgressBar(name, stormConf_, getTopology());
+    }
+
+    public void submitTopology(String name, boolean local) throws 
+        AuthorizationException, AlreadyAliveException, InvalidTopologyException {
+        if (local) {
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology(name, stormConf_, getTopology());
+            backtype.storm.utils.Utils.sleep(10000);
+            cluster.killTopology(name);
+            cluster.shutdown();
+        }
+        else 
+            submitTopology(name);
     }
 
     public static int getConfInt(Map conf, String field) {
