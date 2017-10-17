@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class SlidingWindow<K, V> implements Serializable {
+  private static final Logger log = Logger.getLogger(SlidingWindow.class);
   private static final long serialVersionUID = -2645063988768785810L;
 
   private final Slots<K, V> slots;
@@ -57,8 +58,7 @@ public class SlidingWindow<K, V> implements Serializable {
 
   public Map<K, V> reduceThenAdvanceWindow() {
     Map<K, V> reduced = slots.reduceByKey();
-    Values vals = (Values)reduced.get("3C6601");
-    System.out.println("[reduceThenAdvanceWindow]: reduced.size=" + reduced.size());
+    log.info("Number of items after reduceByKey: " + reduced.size());
     slots.wipeSlot(tailSlot);
     slots.wipeZeros();
     advanceHead();

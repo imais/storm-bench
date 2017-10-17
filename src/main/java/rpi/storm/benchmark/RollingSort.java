@@ -67,11 +67,13 @@ public class RollingSort extends BenchmarkBase {
         private final int chunkSize;
         private int index = 0;
         private MutableComparable[] data;
+        private Map<MutableComparable, Tuple> map;
 
 
         public SortBolt(int emitFrequencyInSeconds, int chunkSize) {
             this.emitFrequencyInSeconds = emitFrequencyInSeconds;
             this.chunkSize = chunkSize;
+            this.map = new HashMap<MutableComparable, Tuple>();
         }
 
         @Override
@@ -88,10 +90,28 @@ public class RollingSort extends BenchmarkBase {
                 Arrays.sort(data);
                 basicOutputCollector.emit(new Values(data));
                 log.info("index = " + index);
+
+                // Output every member of the tuple in the log
+                for (int i = 0; i < data.length; i++) {
+                    Tuple sortedTuple = map.get(data[i]);
+                    if (sortedTuple != null) {
+                        String str = "";
+                        for (int j = 0; j < sortedTuple.size(); j++) {
+                            if (j < sortedTuple.size() - 1)
+                                str += sortedTuple.getValue(j) + ", ";
+                            else
+                                str += sortedTuple.getValue(j);
+                        }
+                        log.info(str);
+                    }
+                }
+                this.map = new HashMap<MutableComparable, Tuple>();
             } else {
+                // Use the first object in tuple for sorting
                 Object obj = tuple.getValue(0);
                 if (obj instanceof Comparable) {
                     data[index].set((Comparable) obj);
+                    map.put(data[index], tuple);
                 } else {
                     throw new RuntimeException("tuple value is not a Comparable");
                 }

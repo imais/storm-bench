@@ -21,8 +21,8 @@ rolling_count.emit_freq: 10
 collision_warning.window_length: 60
 collision_warning.emit_freq: 10
 collision_warning.dist_threshold_km: 10
-collisionwarning.sort_emit_freq: 10
-collisionwarning.sort_chunk_size: 30
+collision_warning.sort_emit_freq: 10
+collision_warning.sort_chunk_size: 30
 sol.topology_level: 3
 grep.pattern_string: Tom
 unique_visitor.window_length: 60

@@ -42,11 +42,11 @@ public class CollisionWarning extends BenchmarkBase {
 
     public CollisionWarning(String[] args) throws ParseException {
         super(args);
-        windowLength_ = getConfInt(globalConf_, "collisionwarning.window_length");
-        emitFreq_ = getConfInt(globalConf_, "collisionwarning.emit_freq");
-        distThresholdKm_ = getConfInt(globalConf_, "collisionwarning.dist_threshold_km");
-        sortEmitFreq_ = getConfInt(globalConf_, "collisionwarning.sort_emit_freq");
-        sortChunkSize_ = getConfInt(globalConf_, "collisionwarning.sort_chunk_size");
+        windowLength_ = getConfInt(globalConf_, "collision_warning.window_length");
+        emitFreq_ = getConfInt(globalConf_, "collision_warning.emit_freq");
+        distThresholdKm_ = getConfInt(globalConf_, "collision_warning.dist_threshold_km");
+        sortEmitFreq_ = getConfInt(globalConf_, "collision_warning.sort_emit_freq");
+        sortChunkSize_ = getConfInt(globalConf_, "collision_warning.sort_chunk_size");
     }
 
     public static class LatLongFilterBolt extends BaseBasicBolt {
@@ -156,6 +156,7 @@ public class CollisionWarning extends BenchmarkBase {
                         String flight1 = key + ":" + vals.get(0) + ":" + 
                             vals.get(1) + ":" + vals.get(2);
                         String flight2 = icao + ":" + posTime + ":" + lat + ":" + lng;
+                        // System.out.println(distKm + ", " + flight1 + ", " + flight2);
                         collector.emit(new Values(distKm, flight1, flight2));
                     }
                 }
