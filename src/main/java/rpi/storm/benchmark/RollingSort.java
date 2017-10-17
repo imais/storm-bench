@@ -37,8 +37,8 @@ public class RollingSort extends BenchmarkBase {
 
     public RollingSort(String[] args) throws ParseException {
         super(args);
-        emitFreq_ = getConfInt(globalConf_, "rollingsort.emit_freq");
-        chunkSize_ = getConfInt(globalConf_, "rollingsort.chunk_size");
+        emitFreq_ = getConfInt(globalConf_, "rolling_sort.emit_freq");
+        chunkSize_ = getConfInt(globalConf_, "rolling_sort.chunk_size");
     }
 
     @Override

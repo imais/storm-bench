@@ -36,8 +36,8 @@ public class UniqueVisitor extends BenchmarkBase {
 
     public UniqueVisitor(String[] args) throws ParseException {
         super(args);
-        winLen_ = getConfInt(globalConf_, "uniquevisitor.window_length");
-        emitFreq_ = getConfInt(globalConf_, "uniquevisitor.emit_freq");
+        winLen_ = getConfInt(globalConf_, "unique_visitor.window_length");
+        emitFreq_ = getConfInt(globalConf_, "unique_visitor.emit_freq");
     }
 
     @Override

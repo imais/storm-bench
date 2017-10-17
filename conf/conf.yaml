@@ -1,24 +1,29 @@
 kafka.brokers:
-    - "kafka1"
+    - "localhost"
 
 zookeeper.servers:
-    - "zkserver1"
+    - "localhost"
 
 kafka.port: 9092
 zookeeper.port: 2181
-redis.host: "redis1"
-kafka.topic: "test-event"
+redis.host: "localhost"
+kafka.topic: "adsb"
 kafka.partitions: 5
 
 storm.workers: 8
 storm.ackers: 8
 max.spout.pending: 1000
 
-rollingsort.emit_freq: 60
-rollingsort.chunk_size: 3000000
-rollingcount.window_length: 60
-rollingcount.emit_freq: 10
+rolling_sort.emit_freq: 60
+rolling_sort.chunk_size: 3000000
+rolling_count.window_length: 60
+rolling_count.emit_freq: 10
+collision_warning.window_length: 60
+collision_warning.emit_freq: 10
+collision_warning.dist_threshold_km: 10
+collisionwarning.sort_emit_freq: 10
+collisionwarning.sort_chunk_size: 30
 sol.topology_level: 3
 grep.pattern_string: Tom
-uniquevisitor.window_length: 60
-uniquevisitor.emit_freq: 10
+unique_visitor.window_length: 60
+unique_visitor.emit_freq: 10

@@ -29,8 +29,8 @@ public class RollingCount extends BenchmarkBase {
 
     public RollingCount(String[] args) throws ParseException {
         super(args);
-        windowLength_ = getConfInt(globalConf_, "rollingcount.window_length");
-        emitFreq_ = getConfInt(globalConf_, "rollingcount.emit_freq");
+        windowLength_ = getConfInt(globalConf_, "rolling_count.window_length");
+        emitFreq_ = getConfInt(globalConf_, "rolling_count.emit_freq");
     }
 
     @Override

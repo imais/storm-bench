@@ -58,7 +58,7 @@ public class SlidingWindow<K, V> implements Serializable {
   public Map<K, V> reduceThenAdvanceWindow() {
     Map<K, V> reduced = slots.reduceByKey();
     Values vals = (Values)reduced.get("3C6601");
-    // System.out.println("[reduceThenAdvanceWindow]: reduced.size=" + reduced.size());
+    System.out.println("[reduceThenAdvanceWindow]: reduced.size=" + reduced.size());
     slots.wipeSlot(tailSlot);
     slots.wipeZeros();
     advanceHead();
