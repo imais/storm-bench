@@ -69,7 +69,7 @@ public class RollingCountBolt extends RollingBolt {
       Object obj = entry.getKey();
       Long count = entry.getValue();
       LOG.debug(String.format("get %d %s in last %d seconds", count, obj, windowLengthInSeconds));
-      System.err.println(System.currentTimeMillis() + ", " + obj + ", " + count);
+      // LOG.info(System.currentTimeMillis() + ", " + obj + ", " + count);
       collector.emit(new Values(obj, count));
     }
   }

@@ -109,9 +109,9 @@ public class CollisionWarning extends BenchmarkBase {
             int orgTaskId = context.getThisTaskId();
             totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
             taskId = orgTaskId % totalTasks;
-            System.out.println("original taskId: " + orgTaskId + 
-                               ", taskId: " + taskId + 
-                               ", totalTasks: " + totalTasks);
+            log.info("original taskId: " + orgTaskId + 
+                     ", taskId: " + taskId + 
+                     ", totalTasks: " + totalTasks);
             flightMap = new HashMap<String, Values>();
         }
 
@@ -156,7 +156,7 @@ public class CollisionWarning extends BenchmarkBase {
                         String flight1 = key + ":" + vals.get(0) + ":" + 
                             vals.get(1) + ":" + vals.get(2);
                         String flight2 = icao + ":" + posTime + ":" + lat + ":" + lng;
-                        // System.out.println(distKm + ", " + flight1 + ", " + flight2);
+                        // log.info(distKm + ", " + flight1 + ", " + flight2);
                         collector.emit(new Values(distKm, flight1, flight2));
                     }
                 }
@@ -176,12 +176,12 @@ public class CollisionWarning extends BenchmarkBase {
         builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
         builder.setBolt(LATLONG_FILTER_ID, new LatLongFilterBolt(), parallel_)
             .shuffleGrouping(SPOUT_ID);
-        builder.setBolt(ROLLING_LATLONG_ID, 
-                        new RollingLatLongBolt(windowLength_, emitFreq_), parallel_)
-            .fieldsGrouping(LATLONG_FILTER_ID, new Fields(LatLongFilterBolt.FIELDS_ICAO));
+        // builder.setBolt(ROLLING_LATLONG_ID, 
+        //                 new RollingLatLongBolt(windowLength_, emitFreq_), parallel_)
+        //     .fieldsGrouping(LATLONG_FILTER_ID, new Fields(LatLongFilterBolt.FIELDS_ICAO));
         builder.setBolt(DIST_FILTER_ID, 
                         new DistFilterBolt(distThresholdKm_), parallel_)
-            .allGrouping(ROLLING_LATLONG_ID);
+            .allGrouping(LATLONG_FILTER_ID);
         builder.setBolt(ROLLING_SORT_ID, 
                         new RollingSort.SortBolt(sortEmitFreq_, sortChunkSize_), 1)
             .globalGrouping(DIST_FILTER_ID);
