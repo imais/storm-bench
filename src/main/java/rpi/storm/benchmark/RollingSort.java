@@ -65,14 +65,20 @@ public class RollingSort extends BenchmarkBase {
 
         private final int emitFrequencyInSeconds;
         private final int chunkSize;
+        private final boolean logTopDataOnly;
         private int index = 0;
         private MutableComparable[] data;
         private Map<MutableComparable, Tuple> map;
 
 
         public SortBolt(int emitFrequencyInSeconds, int chunkSize) {
+            this(emitFrequencyInSeconds, chunkSize, true);
+        }
+
+        public SortBolt(int emitFrequencyInSeconds, int chunkSize, boolean logTopDataOnly) {
             this.emitFrequencyInSeconds = emitFrequencyInSeconds;
             this.chunkSize = chunkSize;
+            this.logTopDataOnly = logTopDataOnly;
             this.map = new HashMap<MutableComparable, Tuple>();
         }
 
@@ -89,7 +95,7 @@ public class RollingSort extends BenchmarkBase {
             if (TupleHelpers.isTickTuple(tuple)) {
                 Arrays.sort(data);
                 basicOutputCollector.emit(new Values(data));
-                log.info("index = " + index);
+                // log.info("index = " + index);
 
                 // Output every member of the tuple in the log
                 for (int i = 0; i < data.length; i++) {
@@ -103,6 +109,8 @@ public class RollingSort extends BenchmarkBase {
                                 str += sortedTuple.getValue(j);
                         }
                         log.info(str);
+                        if (logTopDataOnly)
+                            break;
                     }
                 }
                 this.map = new HashMap<MutableComparable, Tuple>();

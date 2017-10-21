@@ -18,11 +18,12 @@ rolling_sort.emit_freq: 60
 rolling_sort.chunk_size: 3000000
 rolling_count.window_length: 60
 rolling_count.emit_freq: 10
-collision_warning.window_length: 60
-collision_warning.emit_freq: 10
 collision_warning.dist_threshold_km: 10
+collision_warning.speculative_comp_num: 5
+collision_warning.speculative_comp_timestep_sec: 60
 collision_warning.sort_emit_freq: 10
 collision_warning.sort_chunk_size: 30
+collision_warning.sort_log_top_data_only: true
 sol.topology_level: 3
 grep.pattern_string: Tom
 unique_visitor.window_length: 60

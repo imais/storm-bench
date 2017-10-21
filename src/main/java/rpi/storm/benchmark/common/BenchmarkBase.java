@@ -129,4 +129,16 @@ abstract public class BenchmarkBase {
             return null;
         }
     }
+
+    public static boolean getConfBoolean(Map conf, String field) {
+        Object val = conf.get(field);
+        if (val != null) {
+            log.info(field + ": " + val);
+            return Boolean.parseBoolean(String.valueOf(val));
+        } 
+        else {
+            log.info(field + " not found");
+            return false;
+        }
+    }
 }
