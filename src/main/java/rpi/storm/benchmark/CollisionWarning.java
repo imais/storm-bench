@@ -30,7 +30,6 @@ public class CollisionWarning extends BenchmarkBase {
 
     public static final String SPOUT_ID = "spout";
     public static final String LATLONG_FILTER_ID = "latlong_filter";
-    public static final String ROLLING_LATLONG_ID = "rolling_latlong";
     public static final String DIST_FILTER_ID = "dist_filter";
     public static final String ROLLING_SORT_ID = "rolling_sort";
 
@@ -166,6 +165,11 @@ public class CollisionWarning extends BenchmarkBase {
             return EARTH_RADIUS_KM * c;
         }
 
+        private long lastLogDisplayedTimeMs = 0;
+        private long numTuplesRecvd = 0;
+        private long numPairsComputed = 0;
+        private long numTuplesEmitted = 0;
+
         @Override
         public void execute(Tuple input, BasicOutputCollector collector) {
             String icao1 = input.getString(0);
@@ -174,6 +178,21 @@ public class CollisionWarning extends BenchmarkBase {
             Double lng1 = input.getDouble(3);
             Double spd1 = input.getDouble(4) * KNOT_TO_KM_PER_SEC;
             Double trak1 = input.getDouble(5);
+            
+            numTuplesRecvd++;
+            
+            long deltaTime = System.currentTimeMillis() - lastLogDisplayedTimeMs;
+            if (deltaTime >= 3000) {
+                double recvdTp = (double)numTuplesRecvd / deltaTime;
+                double pairsTp = (double)numPairsComputed / deltaTime;
+                double emittedTp = (double)numTuplesEmitted / deltaTime;
+                log.info("recvdTp/emittedTp/map.size = " + 
+                         recvdTp + "/" + emittedTp + "/" + flightMap.size());
+                numTuplesRecvd = 0;
+                numPairsComputed = 0;
+                numTuplesEmitted = 0;
+                lastLogDisplayedTimeMs = System.currentTimeMillis();
+            }
 
             if (icao1.hashCode() % totalTasks == taskId) {
                 // if the input belongs to my task or it is newer than previous one, 
@@ -201,6 +220,7 @@ public class CollisionWarning extends BenchmarkBase {
                         Values latLng2 = computeLatLong(lat2, lng2, trak2, dist2);
                         double distKm = computeDist((Double)latLng1.get(0), (Double)latLng1.get(1),
                                                     (Double)latLng2.get(0), (Double)latLng2.get(1));
+                        numPairsComputed++;
 
                         if (distKm <= distThresholdKm) {
                             String flight1 = icao1 + ":(" + latLng1.get(0) + "," + latLng1.get(1) + ")";
@@ -216,6 +236,7 @@ public class CollisionWarning extends BenchmarkBase {
                                 ", [" + icao1 + ":(" + latLng1.get(0) + "," + latLng1.get(1) + "):(" + lat1 + "," + lng1 + ")," + posTime1 + "," + spd1 + "," + trak1 + "]" +
                                 ", [" + icao2 + ":(" + latLng2.get(0) + "," + latLng2.get(1) + "):(" + lat2 + "," + lng2 + ")," + posTime2 + "," + spd2 + "," + trak2 + "]");
                             collector.emit(new Values(distKm, currTime, flight1, flight2));
+                            numTuplesEmitted++;
                         }
                         currTime += (1000 * speculativeCompTimeStepSec);
                     }
@@ -240,10 +261,10 @@ public class CollisionWarning extends BenchmarkBase {
                         new DistFilterBolt(distThresholdKm_, speculativeCompNum_, 
                                            speculativeCompTimeStepSec_), parallel_)
             .allGrouping(LATLONG_FILTER_ID);
-        builder.setBolt(ROLLING_SORT_ID, 
-                        new RollingSort.SortBolt(sortEmitFreq_, sortChunkSize_, 
-                                                 logTopDataOnly_), 1)
-            .globalGrouping(DIST_FILTER_ID);
+        // builder.setBolt(ROLLING_SORT_ID, 
+        //                 new RollingSort.SortBolt(sortEmitFreq_, sortChunkSize_, 
+        //                                          logTopDataOnly_), 1)
+        //     .globalGrouping(DIST_FILTER_ID);
 
         return builder.createTopology();
     }

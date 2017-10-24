@@ -1,8 +1,8 @@
 kafka.brokers:
-    - "localhost"
+    - "kafka1"
 
 zookeeper.servers:
-    - "localhost"
+    - "zkserver1"
 
 kafka.port: 9092
 zookeeper.port: 2181
@@ -19,10 +19,10 @@ rolling_sort.chunk_size: 3000000
 rolling_count.window_length: 60
 rolling_count.emit_freq: 10
 collision_warning.dist_threshold_km: 10
-collision_warning.speculative_comp_num: 5
-collision_warning.speculative_comp_timestep_sec: 60
-collision_warning.sort_emit_freq: 10
-collision_warning.sort_chunk_size: 30
+collision_warning.speculative_comp_num: 3
+collision_warning.speculative_comp_timestep_sec: 5
+collision_warning.sort_emit_freq: 5
+collision_warning.sort_chunk_size: 100
 collision_warning.sort_log_top_data_only: true
 sol.topology_level: 3
 grep.pattern_string: Tom
