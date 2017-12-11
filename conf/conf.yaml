@@ -10,8 +10,9 @@ kafka.port: 9092
 zookeeper.port: 2181
 redis.host: "localhost"
 kafka.topic: "adsb"
-kafka.partitions: 5
 
+storm.spouts_parallel: 1
+storm.bolts_parallel: 1
 storm.workers: 8
 storm.ackers: 8
 max.spout.pending: 1000

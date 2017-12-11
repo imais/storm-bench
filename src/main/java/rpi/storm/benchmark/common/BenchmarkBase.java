@@ -32,14 +32,18 @@ abstract public class BenchmarkBase {
     private Config stormConf_;
     protected Map globalConf_;
     protected SpoutConfig spoutConf_;
-    protected int parallel_;
+    protected int spouts_parallel_;
+    protected int bolts_parallel_;
 
     public BenchmarkBase(String args[]) throws ParseException {
-        // Cli parameters have priorities over file parameters
+        // Cli parameters (cmd.getOptionValue) have priorities over 
+        // config file parameters (globalConf)
         Options opts = new Options();
         opts.addOption("conf", true, "Path to the config file.");
         opts.addOption("topic", true, "Kafka topic to consume.");
-        opts.addOption("parallel", true, "Parallelism (= number of Kafka partitions)");
+        opts.addOption("spouts_parallel", true, 
+                       "Parallelism for spouts (= number of Kafka partitions)");
+        opts.addOption("bolts_parallel", true, "Parallelism for bolts");
         opts.addOption("workers", true, "Number of workers.");
         opts.addOption("ackers", true, "Number of ackers.");
         CommandLineParser parser = new DefaultParser();
@@ -65,10 +69,17 @@ abstract public class BenchmarkBase {
         spoutConf_.scheme = new SchemeAsMultiScheme(new StringScheme());
         spoutConf_.ignoreZkOffsets = true; // Read from the beginning of the topic
 
-        // parallel
-        String parallel = cmd.getOptionValue("parallel");
-        if (parallel != null) globalConf_.put("kafka.partitions", Integer.parseInt(parallel));
-        parallel_ = getConfInt(globalConf_, "kafka.partitions");
+        // spouts parallelism
+        String spouts_parallel = cmd.getOptionValue("spouts_parallel");
+        if (spouts_parallel != null) globalConf_.put("storm.spouts_parallel", 
+                                                     Integer.parseInt(spouts_parallel));
+        spouts_parallel_ = getConfInt(globalConf_, "storm.spouts_parallel");
+
+        // bolts parallelism
+        String bolts_parallel = cmd.getOptionValue("bolts_parallel");
+        if (bolts_parallel != null) globalConf_.put("storm.boltss_parallel", 
+                                                    Integer.parseInt(bolts_parallel));
+        bolts_parallel_ = getConfInt(globalConf_, "storm.bolts_parallel");
 
         // workers
         String workers = cmd.getOptionValue("workers");

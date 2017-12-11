@@ -44,8 +44,8 @@ public class RollingSort extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(SORT_BOLT_ID, new SortBolt(emitFreq_, chunkSize_), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(SORT_BOLT_ID, new SortBolt(emitFreq_, chunkSize_), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
 
         return builder.createTopology();

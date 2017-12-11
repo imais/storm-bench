@@ -254,12 +254,12 @@ public class CollisionWarning extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(LATLONG_FILTER_ID, new LatLongFilterBolt(), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(LATLONG_FILTER_ID, new LatLongFilterBolt(), bolts_parallel_)
             .shuffleGrouping(SPOUT_ID);
         builder.setBolt(DIST_FILTER_ID, 
                         new DistFilterBolt(distThresholdKm_, speculativeCompNum_, 
-                                           speculativeCompTimeStepSec_), parallel_)
+                                           speculativeCompTimeStepSec_), bolts_parallel_)
             .allGrouping(LATLONG_FILTER_ID);
         // builder.setBolt(ROLLING_SORT_ID, 
         //                 new RollingSort.SortBolt(sortEmitFreq_, sortChunkSize_, 

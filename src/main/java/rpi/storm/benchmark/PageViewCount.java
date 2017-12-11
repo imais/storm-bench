@@ -34,10 +34,10 @@ public class PageViewCount extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(VIEW_ID, new PageViewBolt(Item.URL, Item.ONE), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(VIEW_ID, new PageViewBolt(Item.URL, Item.ONE), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(COUNT_ID, new WordCount.Count(), parallel_)
+        builder.setBolt(COUNT_ID, new WordCount.Count(), bolts_parallel_)
             .fieldsGrouping(VIEW_ID, new Fields(Item.URL.toString()));
 
         return builder.createTopology();

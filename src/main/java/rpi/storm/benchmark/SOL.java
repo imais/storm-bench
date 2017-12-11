@@ -40,11 +40,11 @@ public class SOL extends BenchmarkBase {
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
         // numLevel: total number of layers including one spout and bolts
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(BOLT_ID + 1, new ConstBolt(), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(BOLT_ID + 1, new ConstBolt(), bolts_parallel_)
             .shuffleGrouping(SPOUT_ID);
         for (int levelNum = 2; levelNum <= numLevels_ - 1; levelNum++) {
-            builder.setBolt(BOLT_ID + levelNum, new ConstBolt(), parallel_)
+            builder.setBolt(BOLT_ID + levelNum, new ConstBolt(), bolts_parallel_)
                 .shuffleGrouping(BOLT_ID + (levelNum - 1));
         }
 

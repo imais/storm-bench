@@ -40,10 +40,10 @@ public class Grep extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(FM_ID, new FindMatchingSentence(regex_), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(FM_ID, new FindMatchingSentence(regex_), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(CM_ID, new CountMatchingSentence(), parallel_)
+        builder.setBolt(CM_ID, new CountMatchingSentence(), bolts_parallel_)
             .fieldsGrouping(FM_ID, new Fields(FindMatchingSentence.FIELDS));        
 
         return builder.createTopology();

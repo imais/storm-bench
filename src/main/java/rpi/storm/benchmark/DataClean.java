@@ -38,10 +38,10 @@ public class DataClean extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(VIEW_ID, new PageViewBolt(Item.STATUS, Item.ALL), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(VIEW_ID, new PageViewBolt(Item.STATUS, Item.ALL), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(FILTER_ID, new FilterBolt<Integer>(200), parallel_)
+        builder.setBolt(FILTER_ID, new FilterBolt<Integer>(200), bolts_parallel_)
             .fieldsGrouping(VIEW_ID, new Fields(Item.STATUS.toString()));
 
         return builder.createTopology();

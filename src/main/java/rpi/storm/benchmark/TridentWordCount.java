@@ -41,12 +41,12 @@ public class TridentWordCount extends BenchmarkBase {
 
         TridentTopology trident = new TridentTopology();
 
-        trident.newStream("wordcount", spout).name("sentence").parallelismHint(parallel_).shuffle()
+        trident.newStream("wordcount", spout).name("sentence").parallelismHint(spouts_parallel_).shuffle()
             .each(new Fields(StringScheme.STRING_SCHEME_KEY), new WordSplit(), new Fields("word"))
-            .parallelismHint(parallel_)
+            .parallelismHint(bolts_parallel_)
             .groupBy(new Fields("word"))
             .persistentAggregate(new MemoryMapState.Factory(), new Count(), new Fields("count"))
-            .parallelismHint(parallel_);
+            .parallelismHint(bolts_parallel_);
 
         return trident.build();
     }

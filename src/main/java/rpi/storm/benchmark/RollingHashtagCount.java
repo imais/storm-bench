@@ -79,10 +79,11 @@ public class RollingHashtagCount extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(HASHTAG_ID, new HashtagBolt(), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(HASHTAG_ID, new HashtagBolt(), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(COUNT_ID, new RollingCountBolt(windowLength_, emitFreq_), parallel_)
+        builder.setBolt(COUNT_ID, new RollingCountBolt(windowLength_, emitFreq_), 
+                        bolts_parallel_)
             .fieldsGrouping(HASHTAG_ID, new Fields(HashtagBolt.FIELDS_HASHTAG));
 
         return builder.createTopology();

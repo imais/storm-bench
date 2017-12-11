@@ -36,10 +36,11 @@ public class RollingCount extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(SPLIT_ID, new WordCount.SplitSentence(), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(SPLIT_ID, new WordCount.SplitSentence(), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(COUNT_ID, new RollingCountBolt(windowLength_, emitFreq_), parallel_)
+        builder.setBolt(COUNT_ID, new RollingCountBolt(windowLength_, emitFreq_), 
+                        bolts_parallel_)
             .fieldsGrouping(SPLIT_ID, new Fields(WordCount.SplitSentence.FIELDS));
 
         return builder.createTopology();

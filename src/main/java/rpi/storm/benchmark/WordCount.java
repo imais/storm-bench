@@ -37,10 +37,10 @@ public class WordCount extends BenchmarkBase {
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), parallel_);
-        builder.setBolt(SPLIT_ID, new SplitSentence(), parallel_)
+        builder.setSpout(SPOUT_ID, new KafkaSpout(spoutConf_), spouts_parallel_);
+        builder.setBolt(SPLIT_ID, new SplitSentence(), bolts_parallel_)
             .localOrShuffleGrouping(SPOUT_ID);
-        builder.setBolt(COUNT_ID, new Count(), parallel_)
+        builder.setBolt(COUNT_ID, new Count(), bolts_parallel_)
             .fieldsGrouping(SPLIT_ID, new Fields(SplitSentence.FIELDS));
 
         return builder.createTopology();
