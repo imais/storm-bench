@@ -80,7 +80,7 @@ abstract public class BenchmarkBase {
 
         // bolts parallelism
         String bolts_parallel = cmd.getOptionValue("bolts_parallel");
-        if (bolts_parallel != null) globalConf_.put("storm.boltss_parallel", 
+        if (bolts_parallel != null) globalConf_.put("storm.bolts_parallel", 
                                                     Integer.parseInt(bolts_parallel));
         bolts_parallel_ = getConfInt(globalConf_, "storm.bolts_parallel");
 
