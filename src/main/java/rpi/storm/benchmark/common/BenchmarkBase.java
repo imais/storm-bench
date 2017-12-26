@@ -35,6 +35,7 @@ abstract public class BenchmarkBase {
     protected int spouts_parallel_;
     protected int bolts_parallel_;
 
+
     public BenchmarkBase(String args[]) throws ParseException {
         // Cli parameters (cmd.getOptionValue) have priorities over 
         // config file parameters (globalConf)
@@ -46,6 +47,7 @@ abstract public class BenchmarkBase {
         opts.addOption("bolts_parallel", true, "Parallelism for bolts");
         opts.addOption("workers", true, "Number of workers.");
         opts.addOption("ackers", true, "Number of ackers.");
+        opts.addOption("group_id", true, "Consumer group ID.");
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(opts, args);
         String configPath = cmd.getOptionValue("conf");
@@ -63,11 +65,12 @@ abstract public class BenchmarkBase {
         String zkServerHosts = Utils.joinHosts(
             (List<String>)globalConf_.get("zookeeper.servers"),
             Integer.toString((Integer)globalConf_.get("zookeeper.port")));
-        spoutConf_ = new SpoutConfig(new ZkHosts(zkServerHosts), 
-                                     topic, "/" + topic, 
-                                     UUID.randomUUID().toString());
+        String groupId = (cmd.getOptionValue("group_id") == null) ?
+            UUID.randomUUID().toString() : cmd.getOptionValue("group_id");
+        spoutConf_ = new SpoutConfig(new ZkHosts(zkServerHosts), topic, "/" + topic, groupId);
         spoutConf_.scheme = new SchemeAsMultiScheme(new StringScheme());
-        spoutConf_.ignoreZkOffsets = true; // Read from the beginning of the topic
+        // spoutConf_.ignoreZkOffsets = true; // Read from the beginning of the topic
+        spoutConf_.startOffsetTime = kafka.api.OffsetRequest.EarliestTime();
 
         // spouts parallelism
         String spouts_parallel = cmd.getOptionValue("spouts_parallel");
