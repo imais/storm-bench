@@ -63,22 +63,22 @@ public class RollingSort extends BenchmarkBase {
         public static final int DEFAULT_CHUNK_SIZE = 100;
         public static final String FIELDS = "sorted_data";
 
-        private final int emitFrequencyInSeconds;
-        private final int chunkSize;
-        private final boolean logTopDataOnly;
-        private int index = 0;
-        private MutableComparable[] data;
-        private Map<MutableComparable, Tuple> map;
+        protected final int emitFrequencyInSeconds;
+        protected final int chunkSize;
+        protected final int topK;
+        protected int index = 0;
+        protected MutableComparable[] data;
+        protected Map<MutableComparable, Tuple> map;
 
 
         public SortBolt(int emitFrequencyInSeconds, int chunkSize) {
-            this(emitFrequencyInSeconds, chunkSize, true);
+            this(emitFrequencyInSeconds, chunkSize, -1 /* all */);
         }
 
-        public SortBolt(int emitFrequencyInSeconds, int chunkSize, boolean logTopDataOnly) {
+        public SortBolt(int emitFrequencyInSeconds, int chunkSize,int topK) {
             this.emitFrequencyInSeconds = emitFrequencyInSeconds;
             this.chunkSize = chunkSize;
-            this.logTopDataOnly = logTopDataOnly;
+            this.topK = topK;
             this.map = new HashMap<MutableComparable, Tuple>();
         }
 
@@ -93,13 +93,16 @@ public class RollingSort extends BenchmarkBase {
         @Override
         public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
             if (TupleHelpers.isTickTuple(tuple)) {
-                Arrays.sort(data);
-                basicOutputCollector.emit(new Values(data));
+                Arrays.sort(this.data);
+                basicOutputCollector.emit(new Values(this.data));
                 // log.info("index = " + index);
 
-                // Output every member of the tuple in the log
-                for (int i = 0; i < data.length; i++) {
-                    Tuple sortedTuple = map.get(data[i]);
+                // if topK == -1, output all distinct entries in map
+                // if topK ==  0  output nothing
+                int numDisplayLogs = (this.topK == -1) ? 
+                    this.data.length : Math.min(this.topK, this.data.length);
+                for (int i = 0; i < numDisplayLogs; i++) {
+                    Tuple sortedTuple = map.get(this.data[i]);
                     if (sortedTuple != null) {
                         String str = "";
                         for (int j = 0; j < sortedTuple.size(); j++) {
@@ -109,8 +112,6 @@ public class RollingSort extends BenchmarkBase {
                                 str += sortedTuple.getValue(j);
                         }
                         log.info(str);
-                        if (logTopDataOnly)
-                            break;
                     }
                 }
                 this.map = new HashMap<MutableComparable, Tuple>();
@@ -140,7 +141,7 @@ public class RollingSort extends BenchmarkBase {
         }
     }
 
-    private static class MutableComparable implements Comparable, Serializable {
+    public static class MutableComparable implements Comparable, Serializable {
         private static final long serialVersionUID = -5417151427431486637L;
         private Comparable c = null;
 

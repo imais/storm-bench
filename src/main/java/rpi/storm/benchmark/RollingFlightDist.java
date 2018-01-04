@@ -16,17 +16,20 @@ import org.slf4j.LoggerFactory;
 import org.json.JSONObject;
 import storm.kafka.KafkaSpout;
 
+import intel.storm.benchmark.util.TupleHelpers;
 import yahoo.benchmark.common.Utils;
-import rpi.storm.benchmark.RollingSort;
+import rpi.storm.benchmark.RollingSort.SortBolt;
+import rpi.storm.benchmark.RollingSort.MutableComparable;
 import rpi.storm.benchmark.common.BenchmarkBase;
 import rpi.storm.benchmark.lib.bolt.RollingLatLongBolt;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
 
-public class CollisionWarning extends BenchmarkBase {
-    private static final Logger log = LoggerFactory.getLogger(CollisionWarning.class);
+public class RollingFlightDist extends BenchmarkBase {
+    private static final Logger log = LoggerFactory.getLogger(RollingFlightDist.class);
 
     public static final String SPOUT_ID = "spout";
     public static final String LATLONG_FILTER_ID = "latlong_filter";
@@ -40,16 +43,16 @@ public class CollisionWarning extends BenchmarkBase {
     private int sortChunkSize_;
     private boolean logTopDataOnly_;
 
-    public CollisionWarning(String[] args) throws ParseException {
+    public RollingFlightDist(String[] args) throws ParseException {
         super(args);
-        distThresholdKm_ = getConfInt(globalConf_, "collision_warning.dist_threshold_km");
+        distThresholdKm_ = getConfInt(globalConf_, "rolling_flight_dist.dist_threshold_km");
         speculativeCompNum_ = 
-            getConfInt(globalConf_, "collision_warning.speculative_comp_num");
+            getConfInt(globalConf_, "rolling_flight_dist.speculative_comp_num");
         speculativeCompTimeStepSec_ = 
-            getConfInt(globalConf_, "collision_warning.speculative_comp_timestep_sec");
-        sortEmitFreq_ = getConfInt(globalConf_, "collision_warning.sort_emit_freq");
-        sortChunkSize_ = getConfInt(globalConf_, "collision_warning.sort_chunk_size");
-        logTopDataOnly_ = getConfBoolean(globalConf_, "collision_warning.sort_log_top_data_only");
+            getConfInt(globalConf_, "rolling_flight_dist.speculative_comp_timestep_sec");
+        sortEmitFreq_ = getConfInt(globalConf_, "rolling_flight_dist.sort_emit_freq");
+        sortChunkSize_ = getConfInt(globalConf_, "rolling_flight_dist.sort_chunk_size");
+        logTopDataOnly_ = getConfBoolean(globalConf_, "rolling_flight_dist.sort_log_top_data_only");
     }
 
     public static class LatLongFilterBolt extends BaseBasicBolt {
@@ -251,6 +254,48 @@ public class CollisionWarning extends BenchmarkBase {
         
     }
 
+    public static class RollingSortBolt extends SortBolt {
+        public RollingSortBolt(int emitFrequencyInSeconds, int chunkSize) {
+            super(emitFrequencyInSeconds, chunkSize);
+        }
+
+        @Override
+        public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+            if (TupleHelpers.isTickTuple(tuple)) {
+                Arrays.sort(data);
+                basicOutputCollector.emit(new Values(data));
+
+                // if topK == -1, output all distinct entries in map
+                // if topK ==  0  output nothing
+                int numDisplayLogs = (topK == -1) ? data.length : Math.min(topK, data.length);
+                for (int i = 0; i < numDisplayLogs; i++) {
+                    Tuple sortedTuple = map.get(data[i]);
+                    if (sortedTuple != null) {
+                        String str = "";
+                        for (int j = 0; j < sortedTuple.size(); j++) {
+                            if (j < sortedTuple.size() - 1)
+                                str += sortedTuple.getValue(j) + ", ";
+                            else
+                                str += sortedTuple.getValue(j);
+                        }
+                        log.info(str);
+                    }
+                }
+                map = new HashMap<MutableComparable, Tuple>();
+            } else {
+                // Use the first object in tuple for sorting
+                Object obj = tuple.getValue(0);
+                if (obj instanceof Comparable) {
+                    data[index].set((Comparable) obj);
+                    map.put(data[index], tuple);
+                } else {
+                    throw new RuntimeException("tuple value is not a Comparable");
+                }
+                index = (index + 1 == chunkSize) ? 0 : index + 1;
+            }
+        }
+    }
+
     @Override
     public StormTopology getTopology() {
         TopologyBuilder builder = new TopologyBuilder();
@@ -261,16 +306,14 @@ public class CollisionWarning extends BenchmarkBase {
                         new DistFilterBolt(distThresholdKm_, speculativeCompNum_, 
                                            speculativeCompTimeStepSec_), bolts_parallel_)
             .allGrouping(LATLONG_FILTER_ID);
-        // builder.setBolt(ROLLING_SORT_ID, 
-        //                 new RollingSort.SortBolt(sortEmitFreq_, sortChunkSize_, 
-        //                                          logTopDataOnly_), 1)
-        //     .globalGrouping(DIST_FILTER_ID);
+        builder.setBolt(ROLLING_SORT_ID, new SortBolt(sortEmitFreq_, sortChunkSize_), 1)
+            .globalGrouping(DIST_FILTER_ID);
 
         return builder.createTopology();
     }
 
     public static void main(String[] args) throws Exception {
-        CollisionWarning app = new CollisionWarning(args);
+        RollingFlightDist app = new RollingFlightDist(args);
         app.submitTopology(args[0]);
     }
 }
