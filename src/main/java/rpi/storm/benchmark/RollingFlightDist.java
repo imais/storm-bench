@@ -26,6 +26,7 @@ import rpi.storm.benchmark.lib.bolt.RollingLatLongBolt;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 
 
 public class RollingFlightDist extends BenchmarkBase {
@@ -109,12 +110,12 @@ public class RollingFlightDist extends BenchmarkBase {
         public static final String FIELDS_FLIGHT1 = "flight1";
         public static final String FIELDS_FLIGHT2 = "flight2";
 
-        private static int taskId;
-        private static int totalTasks;
-        private static Map<String, Values> flightMap;
         private static double EARTH_RADIUS_KM = 6378.137; // mean radius in kilometer
         private static double KNOT_TO_KM_PER_SEC = 0.000514444;
 
+        private int taskId;
+        private int totalTasks;
+        private Map<String, Values> flightMap;
         private double distThresholdKm;
         private int speculativeCompNum;
         private int speculativeCompTimeStepSec;
@@ -208,7 +209,7 @@ public class RollingFlightDist extends BenchmarkBase {
                 // Compute the input flight against all the flights in flightMap
                 for (Map.Entry<String, Values> entry : flightMap.entrySet()) {
                     String icao2 = entry.getKey();
-                    Values vals = entry.getValue();     
+                    Values vals = entry.getValue();
                     Long posTime2 = (Long)vals.get(0);        
                     Double lat2 = (Double)vals.get(1);
                     Double lng2 = (Double)vals.get(2);
