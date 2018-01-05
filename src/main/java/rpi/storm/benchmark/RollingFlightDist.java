@@ -41,7 +41,7 @@ public class RollingFlightDist extends BenchmarkBase {
     private int speculativeCompTimeStepSec_;
     private int sortEmitFreq_;
     private int sortChunkSize_;
-    private boolean logTopDataOnly_;
+    private int topK_;
 
     public RollingFlightDist(String[] args) throws ParseException {
         super(args);
@@ -52,7 +52,7 @@ public class RollingFlightDist extends BenchmarkBase {
             getConfInt(globalConf_, "rolling_flight_dist.speculative_comp_timestep_sec");
         sortEmitFreq_ = getConfInt(globalConf_, "rolling_flight_dist.sort_emit_freq");
         sortChunkSize_ = getConfInt(globalConf_, "rolling_flight_dist.sort_chunk_size");
-        logTopDataOnly_ = getConfBoolean(globalConf_, "rolling_flight_dist.sort_log_top_data_only");
+        topK_ = getConfInt(globalConf_, "rolling_flight_dist.top_k");
     }
 
     public static class LatLongFilterBolt extends BaseBasicBolt {
@@ -198,13 +198,14 @@ public class RollingFlightDist extends BenchmarkBase {
             }
 
             if (icao1.hashCode() % totalTasks == taskId) {
-                // if the input belongs to my task or it is newer than previous one, 
+                // If the input belongs to my task and it is newer than previous one, 
                 // put it in the map
                 Values vals = flightMap.get(icao1);
                 if (vals == null || (Long)vals.get(0) < posTime1)
                     flightMap.put(icao1, new Values(posTime1, lat1, lng1, spd1, trak1));
             }
             else {
+                // Compute the input flight against all the flights in flightMap
                 for (Map.Entry<String, Values> entry : flightMap.entrySet()) {
                     String icao2 = entry.getKey();
                     Values vals = entry.getValue();     
@@ -255,8 +256,8 @@ public class RollingFlightDist extends BenchmarkBase {
     }
 
     public static class RollingSortBolt extends SortBolt {
-        public RollingSortBolt(int emitFrequencyInSeconds, int chunkSize) {
-            super(emitFrequencyInSeconds, chunkSize);
+        public RollingSortBolt(int emitFrequencyInSeconds, int chunkSize, int topK) {
+            super(emitFrequencyInSeconds, chunkSize, topK);
         }
 
         @Override
@@ -306,7 +307,7 @@ public class RollingFlightDist extends BenchmarkBase {
                         new DistFilterBolt(distThresholdKm_, speculativeCompNum_, 
                                            speculativeCompTimeStepSec_), bolts_parallel_)
             .allGrouping(LATLONG_FILTER_ID);
-        builder.setBolt(ROLLING_SORT_ID, new SortBolt(sortEmitFreq_, sortChunkSize_), 1)
+        builder.setBolt(ROLLING_SORT_ID, new SortBolt(sortEmitFreq_, sortChunkSize_, topK_), 1)
             .globalGrouping(DIST_FILTER_ID);
 
         return builder.createTopology();
@@ -317,4 +318,3 @@ public class RollingFlightDist extends BenchmarkBase {
         app.submitTopology(args[0]);
     }
 }
-
