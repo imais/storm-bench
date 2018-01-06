@@ -65,6 +65,11 @@ public class RollingFlightDist extends BenchmarkBase {
         public static final String FIELDS_TRAK = "trak";
         public static final String FIELDS_GND = "gnd";
 
+        private long lastLogDisplayedTimeMs = 0;
+        private long numTuplesRecvd = 0;
+        private long numTuplesParsed = 0;
+        private long numTuplesEmitted = 0;
+
         @Override
         public void prepare(Map stormConf, TopologyContext context) {
         }
@@ -73,7 +78,18 @@ public class RollingFlightDist extends BenchmarkBase {
         public void execute(Tuple input, BasicOutputCollector collector) {
             String str = input.getString(0);
 
+            numTuplesRecvd++;
+            long deltaTime = System.currentTimeMillis() - lastLogDisplayedTimeMs;
+            if (deltaTime >= 3000) {
+                log.info("Tuples recvd/parsed/emitted = " + 
+                         numTuplesRecvd + "/" + numTuplesParsed + "/" + numTuplesEmitted);
+                numTuplesRecvd = numTuplesParsed = numTuplesEmitted = 0;
+                lastLogDisplayedTimeMs = System.currentTimeMillis();
+            }
+
+            str = str.endsWith("\n") ? str.substring(0, str.length() - 1) : str;
             if (str.startsWith("{\"Id\"") && str.endsWith("},")) {
+                numTuplesParsed++;
                 // remove "," at the end and parse it as an JSON object
                 JSONObject obj = new JSONObject(str.substring(0, str.length() - 1));
                 if (obj.has("Icao") && !obj.isNull("Icao") && 
@@ -92,6 +108,7 @@ public class RollingFlightDist extends BenchmarkBase {
                     if (!obj.has("Gnd") || obj.isNull("Gnd") || !obj.getBoolean("Gnd")) {
                         // if Gnd is true, do not emit
                         collector.emit(new Values(icao, posTime, lat, lng, spd, trak));
+                        numTuplesEmitted++;
                     }
                 }
             }
@@ -184,17 +201,12 @@ public class RollingFlightDist extends BenchmarkBase {
             Double trak1 = input.getDouble(5);
             
             numTuplesRecvd++;
-            
             long deltaTime = System.currentTimeMillis() - lastLogDisplayedTimeMs;
             if (deltaTime >= 3000) {
-                double recvdTp = (double)numTuplesRecvd / deltaTime;
-                double pairsTp = (double)numPairsComputed / deltaTime;
-                double emittedTp = (double)numTuplesEmitted / deltaTime;
-                log.info("recvdTp/emittedTp/map.size = " + 
-                         recvdTp + "/" + emittedTp + "/" + flightMap.size());
-                numTuplesRecvd = 0;
-                numPairsComputed = 0;
-                numTuplesEmitted = 0;
+                log.info("Tuples recvd/compd/emitted = " + 
+                         numTuplesRecvd + "/" + numPairsComputed + "/" + numTuplesEmitted +
+                         ", flightMap.size() = " + flightMap.size());
+                numTuplesRecvd = numPairsComputed = numTuplesEmitted = 0;
                 lastLogDisplayedTimeMs = System.currentTimeMillis();
             }
 
