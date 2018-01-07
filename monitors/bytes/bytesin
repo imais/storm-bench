@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source ../../config
+
+script -c "${TCPDUMP} -i eth0 -Q in -F in_filter --throughput-tracking=${TCPDUMP_SAMPLE_INTERVAL_SEC}" | stdbuf -oL \grep "^throughput" | stdbuf -oL sed 's/throughput: /set {"args": {"bytesin": /' | stdbuf -oL sed 's/ bytes\/s/}}/' | nc ${METRICS_SERVER_HOST} ${METRICS_SERVER_PORT} > nc.log
