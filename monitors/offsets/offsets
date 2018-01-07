@@ -2,4 +2,4 @@
 
 source ../../config
 
-script -c "python offsets_monitor.py --topic ${TOPIC} --group_id ${GROUP_ID} --interval_sec ${LAG_MONITOR_INTERVAL_SEC}" | stdbuf -oL grep "offsets" | stdbuf -oL sed 's/^{/set {"args": {/' | stdbuf -oL sed 's/]}/]}}/' | nc ${METRICS_SERVER_HOST} ${METRICS_SERVER_PORT} -O ${NETCAT_SEND_BUFFER} > nc.log
+script -c "python offsets_monitor.py --kafka_host ${KAFKA_HOST} --zk_host ${ZK_HOST} --topic ${TOPIC} --group_id ${GROUP_ID} --interval_sec ${LAG_MONITOR_INTERVAL_SEC}" | stdbuf -oL grep "offsets" | stdbuf -oL sed 's/^{/set {"args": {/' | stdbuf -oL sed 's/]}/]}}/' | nc ${METRICS_SERVER_HOST} ${METRICS_SERVER_PORT} -O ${NETCAT_SEND_BUFFER} > nc.log
