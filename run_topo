@@ -1,0 +1,87 @@
+#!/bin/bash
+
+JAR="./target/storm-bench-0.1-jar-with-dependencies.jar"
+CONF="./conf/conf.yaml"
+PACKAGE="rpi.storm.benchmark"
+CORES_PER_VM=2
+
+if [ $# -lt 2 ] ; then
+    echo "Usage; ./run {rsort|sol|wc|clean|grep|pv|visitor|rcount|gcount} [#VMs(m)]"
+    exit 1    
+fi
+
+run_cmd() {
+    local cmd=$1
+    echo $cmd
+    eval $cmd
+}
+
+case "$1" in
+    rsort)
+        class=RollingSort
+        topo=rollingsort
+        topic=rand
+        num_comps=2
+        ;;
+    sol)
+        class=SOL
+        topo=sol
+        topic=bytes
+        num_comps=2
+        ;;
+    wc)
+        class=WordCount
+        topo=wordcount
+        topic=book
+        num_comps=3
+        ;;
+    clean)
+        class=DataClean
+        topo=dataclean
+        topic=view
+        num_comps=3
+        ;;
+    grep)
+        class=Grep
+        topo=grep
+        topic=book
+        num_comps=3
+        ;;
+    pv)
+        class=PageViewCount
+        topo=pageviewcount
+        topic=view
+        num_comps=3
+        ;;
+    visitor)
+        class=UniqueVisitor
+        topo=uniquevisitor
+        topic=view
+        num_comps=3
+        ;;
+    rcount)
+        class=RollingCount
+        topo=rollingcount
+        topic=book
+        num_comps=3
+        ;;
+    gcount)
+        class=RollingGeoCount
+        topo=rollinggeocount
+        topic=adsb
+        num_comps=3
+        ;;
+esac
+
+echo "Submitting ${topo}"
+
+parallel=$[$2 * ${CORES_PER_VM} / ${num_comps}]
+if [ $parallel -lt 1 ] ; then
+    parallel=1
+fi;
+workers=$2
+ackers=$2
+
+run_cmd "storm jar ${JAR} ${PACKAGE}.${class} ${topo} -conf ${CONF} -topic ${topic} -parallel ${parallel} -workers ${workers} -ackers ${ackers}"
+
+echo ${topo} > topo

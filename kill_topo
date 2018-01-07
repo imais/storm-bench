@@ -1,0 +1,44 @@
+#!/bin/bash
+
+run_cmd() {
+    local cmd=$1
+    echo $cmd
+    eval $cmd
+}
+
+case "$1" in
+    rsort)
+        topo=rollingsort
+        ;;
+    sol)
+        topo=sol
+        ;;
+    wc)
+        topo=wordcount
+        ;;
+    clean)
+        topo=dataclean
+        ;;
+    grep)
+        topo=grep
+        ;;
+    pv)
+        topo=pageviewcount
+        ;;
+    visitor)
+        topo=uniquevisitorp
+        ;;
+    trident)
+        topo=tridentwordcount
+        ;;
+    rcount)
+        topo=rollingcount
+        ;;
+    *)
+        topo=`cat ./topo`
+        ;;
+esac
+
+echo "Killing ${topo}"
+
+run_cmd "storm kill -w 0 ${topo} || true"
