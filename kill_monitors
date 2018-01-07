@@ -2,8 +2,8 @@
 
 # ps xao pid,ppid,gid,pgid,sid,comm | tail -n 20
 
-pkill -P `pgrep bytesin` | head -n 1
-pkill -P `pgrep bytesout` | head -n 1
-pkill -P `pgrep offsets` | head -n 1
-pkill -P `pgrep msgsize` | head -n 1
+pkill -P `pgrep bytesin`
+pkill -P `pgrep bytesout`
+pkill -P `pgrep offsets`
+pkill -P `pgrep minavg`
 

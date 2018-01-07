@@ -4,9 +4,7 @@ source ../../config
 
 java JmxMonitor kafka.Kafka ./beans ${MSGSIZE_MONITOR_INTERVAL_SEC} | 
 stdbuf -oL awk -F "\"*, \"*" '{
-    printf "set {\"args\": {\"msgsize\": "
-    if ($2 > 0.0)
-        printf "%.3f}}\n", ($3 / $2)
-    else
-        printf "%.3f}}\n", $2
+    printf "set {\"args\": {\"msgsin_minavg\": %.3f, ", $2
+    printf "\"bytesin_minavg\": %.3f, ", $3
+    printf "\"bytesout_minavg\": %.3f}}\n", $4
 }' | nc ${METRICS_SERVER_HOST} ${METRICS_SERVER_PORT} > nc.log

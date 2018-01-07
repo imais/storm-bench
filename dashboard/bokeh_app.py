@@ -11,6 +11,7 @@ METRICS_SERVER_IP = 'localhost'
 METRICS_SERVER_PORT = 9999
 BUFFER_SIZE = 1024
 UPDATE_INTERVAL_MSEC = 3000
+REQUEST_METRICS = ['bytesout', 'bytesin', 'offsets', 'bytesout_minavg', 'bytesin_minavg', 'msgsin_minavg']
 
 
 def connect(ip, port):
@@ -24,7 +25,7 @@ def update_plots():
 	time = [now]
 	display_time = [now.strftime("%m-%d-%Y %H:%M:%S.%f")]
 
-	args = {'args': request_metrics}
+	args = {'args': REQUEST_METRICS}
 	req = 'get ' + json.dumps(args)
 	sock.send(req)
 	resp = sock.recv(BUFFER_SIZE)
@@ -38,9 +39,6 @@ def update_plots():
 
 sock = connect(METRICS_SERVER_IP, METRICS_SERVER_PORT)
 plots = [BytesPlot(), LagsPlot(), MsgsizePlot()]
-request_metrics = []
-for plot in plots:
-	request_metrics = request_metrics + plot.request_metrics
 column_plots = [plot.create_plot() for plot in plots]
 
 curdoc().add_root(column(column_plots))

@@ -18,10 +18,10 @@ if [[ ! -z ${pid_offsets} ]] ; then
     echo "Started offsets monitor (PID:${pid_offsets::-1})"
 fi
 
-cd ./monitors/msgsize/; ./msgsize & cd ../../
-pid_msgsize=`pgrep msgsize`
-if [[ ! -z ${pid_msgsize} ]] ; then
-    echo "Started msgsize monitor (PID:${pid_msgsize::-1})"
+cd ./monitors/minavg/; ./minavg & cd ../../
+pid_minavg=`pgrep minavg`
+if [[ ! -z ${pid_minavg} ]] ; then
+    echo "Started minavg monitor (PID:${pid_minavg::-1})"
 fi
 
 
