@@ -1,1 +1,0 @@
-bokeh serve --allow-websocket-origin=kafka1:5006 ./bokeh_app.py

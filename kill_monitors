@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# ps xao pid,ppid,gid,pgid,sid,comm | tail -n 20
-
-pkill -P `pgrep bytesin`
-pkill -P `pgrep bytesout`
-pkill -P `pgrep offsets`
-pkill -P `pgrep minavg`
-
