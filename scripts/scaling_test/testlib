@@ -1,0 +1,91 @@
+#!/bin/bash
+
+source ./test.conf
+
+STORM_BENCH_JAR="${STORM_BENCH_HOME}/target/storm-bench-0.1-jar-with-dependencies.jar"
+CONF="${STORM_BENCH_HOME}/conf/conf.yaml"
+PACKAGE="rpi.storm.benchmark"
+CLASS="RollingFlightDist"
+TOPO="rolling_flight_dist"
+TOPIC="test"
+vCPUS_PER_VM=2          # Amazon EC2's m4.large
+TASKS_PER_vCPU=2        # Assign this #tasks per vCPU
+NUM_PU=3                # PU: Processing Unit
+
+
+function get_date { date "+%Y-%m-%d %H:%M:%S"; }
+function dbg_print { echo "`get_date`" $1; }
+function run_cmd { 
+    dbg_print "$1"
+    # eval $1
+}
+function max {
+    local ar
+    local IFSbak
+    IFSbak="$IFS"
+    IFS=$' ' read -r -a ar <<< "$1"
+    IFS=$'\n'
+    echo "${ar[*]}" | sort -nr | head -n1
+    IFS=${IFSbak}
+}
+
+function get_parallel {
+    if [ $# -eq 0 ] || [ ${#1} -gt 3 ] ; then
+        echo 0
+        exit 1
+    fi    
+
+    local m=$1
+    parallel=$(($m * ${vCPUS_PER_VM} * ${TASKS_PER_vCPU} / ${NUM_PU}))
+    echo `max "$parallel 2"`
+}
+
+function run_supervisors {
+    local m
+    if [ $# -eq 0 ] || [ ${#1} -gt 3 ] ; then
+        dbg_print "Usage: ./run_supervisor [1-128]"
+        exit 1
+    elif [ ${#1} -eq 1 ] ; then
+        m=00$1
+    elif [ ${#1} -eq 2 ] ; then
+        m=0$1
+    elif [ ${#1} -eq 3 ] ; then
+        m=$1
+    fi
+    dbg_print "Starting $m supervisors..."
+    run_cmd "pdsh -R ssh -l ${REMOTE_USER} -w slave[001-$m] 'sudo rm -rf /app/storm; sudo mkdir -p /app/storm; sudo chown -R ${REMOTE_USER}:${REMOTE_USER} /app/storm; /usr/local/storm/bin/storm supervisor < /dev/null > /home/${REMOTE_USER}/supervisor.log 2>&1 &'"
+    echo $m > ./supervisors
+}
+
+function kill_supervisors {
+    local m=`cat ./supervisors`
+    dbg_print "Killing $m supervisors..."
+    run_cmd "pdsh -R ssh -l ${REMOTE_USER} -w slave[001-$m] 'pkill java'"
+}
+
+function run_topo {
+    if [ $# -eq 0 ] || [ ${#1} -gt 3 ] ; then
+        dbg_print "Usage: ./run_topo [#VMs]"
+    fi
+    local m=$1
+    local workers=$m
+    local ackers=$m
+    local parallel=`get_parallel $m`
+    dbg_print "Starting topology \"${TOPO}\""
+    run_cmd "storm jar ${STORM_BENCH_JAR} ${PACKAGE}.${class} ${TOPO} -conf ${CONF} -topic ${TOPIC} -spout_parallel ${parallel} -bolt_parallel ${parallel} -workers ${workers} -ackers ${ackers} -group_id ${TOPO}"
+}
+
+function kill_topo {
+    dbg_print "Killing ${TOPO}..."
+    run_cmd "storm kill -w 0 ${TOPO} || true"
+}    
+
+function notify_server {
+    if [ $# -eq 0 ] || [ ${#1} -gt 3 ] ; then
+        dbg_print "Usage: ./notify_server [#VMs]"
+    fi
+    local m=$1
+    local msg="set {\"args\": {\"vm\": $m}}"
+    dbg_print "Notify metric server: $msg"
+    echo $msg | nc ${METRICS_SERVER_HOST} ${METRICS_SERVER_PORT}
+}

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+source ./testlib
+SLEEP_SEC=5
+
+
+if [ $# -eq 0 ] || ( [ $1 != 'up' ] && [ $1 != 'down' ] ) ; then
+    echo "Usage: ./scale [up/down]"
+    exit 1
+fi
+
+op=$1
+
+kill_topo
+sleep ${SLEEP_SEC}
+
+kill_supervisors
+sleep ${SLEEP_SEC}
+
+m=`cat ./supervisors`
+if [ $op == 'up' ] ; then
+    # scale up
+    m=$((m + 1))
+else
+    # scale down
+    m=`max "$((m - 1)) 0"`
+fi
+
+run_supervisors $m
+sleep ${SLEEP_SEC}
+
+run_topo $m
+sleep ${SLEEP_SEC}
+
+notify_server $m
